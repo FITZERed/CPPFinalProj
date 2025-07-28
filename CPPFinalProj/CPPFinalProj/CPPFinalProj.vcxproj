@@ -123,7 +123,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConsoleUtils.cpp" />
     <ClCompile Include="CPPFinalProj.cpp" />
+    <ClCompile Include="GameState.cpp" />
+    <ClCompile Include="HUDRenderer.cpp" />
+    <ClCompile Include="InputHandler.cpp" />
+    <ClCompile Include="Inventory.cpp" />
+    <ClCompile Include="MapManager.cpp" />
+    <ClCompile Include="MapRenderer.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Shop.cpp" />
+    <ClCompile Include="ShopInterface.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="ConsoleUtils.h" />
+    <ClInclude Include="GameState.h" />
+    <ClInclude Include="HUDRenderer.h" />
+    <ClInclude Include="InputHandler.h" />
+    <ClInclude Include="Inventory.h" />
+    <ClInclude Include="MapManager.h" />
+    <ClInclude Include="MapRenderer.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Shop.h" />
+    <ClInclude Include="ShopInterface.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
