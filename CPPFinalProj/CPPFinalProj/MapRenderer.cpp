@@ -3,11 +3,8 @@
 #include <windows.h>
 #include "config.h"
 #include "MapManager.h"
+#include "ConsoleUtils.h"
 
-void SetCursor(int x, int y) {
-    COORD pos = { (SHORT)x, (SHORT)y };
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-}
 
 void DrawMap(const MapManager& map, const Player& player) {
     SetCursor(0, 0);

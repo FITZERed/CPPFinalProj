@@ -1,10 +1,7 @@
 #include "HUDRenderer.h"
+#include "ConsoleUtils.h"
 #include <iostream>
 
-void SetCursor(int x, int y) {
-    COORD pos = { (SHORT)x, (SHORT)y };
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-}
 
 void DrawHUD(const GameState& state, const Player& player) {
     SetCursor(65, 0);

@@ -15,7 +15,11 @@ void MapManager::LoadRandomMap(Player& player) {
     std::string line;
     int y = 0;
     while (std::getline(file, line) && y < MAP_HEIGHT) {
-        for (int x = 0; x < MAP_WIDTH; ++x) {
+        if (line.length() < MAP_WIDTH) {
+            std::cerr << "Warning: Line " << y << " is shorter than expected width (" << MAP_WIDTH << ").\n";
+        }
+
+        for (int x = 0; x < MAP_WIDTH && x < line.length(); ++x) {
             char c = line[x];
             map[y][x].character = c;
             map[y][x].zone = GetZoneFromChar(c);
