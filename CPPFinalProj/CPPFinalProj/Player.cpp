@@ -3,26 +3,35 @@
 #include "GameState.h"
 #include "config.h"
 
-void Player::Move(int dx, int dy, MapManager& mapManager, GameState& gameState) {
+Player::Player() {
+    position = { 0, 0 };
+    currentZone = 0; // Default zone, will be set during map load
+}
+
+void Player::Move(int dx, int dy, MapManager& map, GameState& gameState) {
     int newX = position.X + dx;
     int newY = position.Y + dy;
 
-    if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT)
+    // Bounds check
+    if (newX < 0 || newX >= MAP_WIDTH || newY < 0 || newY >= MAP_HEIGHT) {
         return;
-
-    char targetTile = mapManager.map[newY][newX].character;
-
-    if (!mapManager.IsWalkable(targetTile))
-        return;
-
-    int newZone = mapManager.GetZoneAt(newX, newY);
-    if (newZone != currentZone && gameState.actionPoints > 0) {
-        gameState.actionPoints--;
-        currentZone = newZone;
-    }
-    else if (newZone != currentZone && gameState.actionPoints <= 0) {
-        return; // No AP left to cross zones
     }
 
-    position = { (SHORT)newX, (SHORT)newY };
+    char target = map.GetCharAt(newX, newY);
+    if (!map.IsWalkable(target)) {
+        return;
+    }
+
+    int newZone = map.GetZoneAt(newX, newY);
+    
+    if (newZone != currentZone) {
+        if (gameState.actionPoints <= 0) {
+            std::cerr << "Not enough AP to cross zones!\n";
+            return;
+        }
+        gameState.actionPoints--;       //  Spend AP
+        currentZone = newZone;          //  Update zone
+    }
+
+    position = { (SHORT)newX, (SHORT)newY };  //  Apply movement
 }

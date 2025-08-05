@@ -19,4 +19,6 @@ public:
     void LoadRandomMap(Player& player);
     int GetZoneAt(int x, int y);
     bool IsWalkable(char c);
+
+    char GetCharAt(int x, int y);
 };

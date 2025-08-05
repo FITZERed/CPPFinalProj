@@ -6,21 +6,26 @@
 #include "ConsoleUtils.h"
 
 
-void DrawMap(const MapManager& map, const Player& player) {
-    SetCursor(0, 0);
+void DrawMap(const MapManager& mapManager, const Player& player) {
+    for (int y = 0; y < MAP_HEIGHT; ++y) {
+        for (int x = 0; x < MAP_WIDTH; ++x) {
+            const Tile& tile = mapManager.map[y][x];
 
-    for (int y = 0; y < MAP_HEIGHT; y++) {
-        for (int x = 0; x < MAP_WIDTH; x++) {
+            SetCursor(x, y);
+
+            // Convert tile visuals
+            char displayChar = tile.character;
+            if (tile.character == '~' || tile.character == ',' || tile.character == '\'') {
+                displayChar = '.';  
+            }
+
+            // Player rendering
             if (player.position.X == x && player.position.Y == y) {
-                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15); // White
-                std::cout << 'P';
+                std::cout << '@';
             }
             else {
-                char tile = map.map[y][x].character;
-                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 8); // Grey
-                std::cout << (tile == 'P' ? '.' : tile);
+                std::cout << displayChar;
             }
         }
-        std::cout << '\n';
     }
 }

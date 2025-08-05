@@ -4,8 +4,9 @@
 #include <iostream>
 #include <string>
 
+
 void MapManager::LoadRandomMap(Player& player) {
-    std::ifstream file("LevelLayouts/market1.txt"); // Use the first map
+    std::ifstream file("LevelLayouts/market1.txt"); // Example map file
 
     if (!file) {
         std::cerr << "Failed to load map file.\n";
@@ -16,7 +17,7 @@ void MapManager::LoadRandomMap(Player& player) {
     int y = 0;
     while (std::getline(file, line) && y < MAP_HEIGHT) {
         if (line.length() < MAP_WIDTH) {
-            std::cerr << "Warning: Line " << y << " is shorter than expected width (" << MAP_WIDTH << ").\n";
+            std::cerr << "Warning: Line " << y << " is too short.\n";
         }
 
         for (int x = 0; x < MAP_WIDTH && x < line.length(); ++x) {
@@ -26,8 +27,8 @@ void MapManager::LoadRandomMap(Player& player) {
 
             if (c == 'P') {
                 player.position = { (SHORT)x, (SHORT)y };
-                player.currentZone = map[y][x].zone;
-                map[y][x].character = '.'; // Clear player symbol
+                player.currentZone = map[y][x].zone;  //  Use correct zone
+                map[y][x].character = '.';            //  Clear 'P' from map
             }
         }
         y++;
@@ -35,9 +36,13 @@ void MapManager::LoadRandomMap(Player& player) {
 }
 
 bool MapManager::IsWalkable(char c) {
-    return (c == '.' || c == ',' || c == '~' || c == '\'' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5');
+    return (c == '.' || c == ',' || c == '~' || c == '\''); //  Exclude shop numbers
 }
 
 int MapManager::GetZoneAt(int x, int y) {
     return map[y][x].zone;
+}
+
+char MapManager::GetCharAt(int x, int y) {
+    return map[y][x].character;
 }
