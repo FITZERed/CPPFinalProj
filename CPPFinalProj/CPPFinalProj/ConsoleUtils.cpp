@@ -1,5 +1,6 @@
 #include "ConsoleUtils.h"
 #include <iostream> // Needed for std::cout
+#include <windows.h>
 
 void SetCursor(int x, int y) {
     COORD pos = { (SHORT)x, (SHORT)y };

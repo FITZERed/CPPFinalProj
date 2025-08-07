@@ -21,4 +21,15 @@ public:
     bool IsWalkable(char c);
 
     char GetCharAt(int x, int y);
+
+    inline int GetZoneFromChar(char c) { // inline because it's only for parsing
+        switch (c) {
+        case '.': case 'P': return 0;
+        case ',': return 1;
+        case '~': return 2;
+        case '\'': return 3;
+        case ' ': return 4;
+        default: return -1;
+        }
+    }
 };

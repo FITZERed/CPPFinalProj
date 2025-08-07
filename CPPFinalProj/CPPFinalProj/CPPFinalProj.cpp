@@ -5,6 +5,8 @@
 #include "GameState.h"
 #include "InputHandler.h"
 #include "MapRenderer.h"
+#include "ConsoleUtils.h"
+
 
 int main() {
     GameState state = { 1, 1, 0, 300, 5, GameMode::Market };
@@ -16,14 +18,11 @@ int main() {
     while (true) {
         DrawMap(mapManager, player);
 
-        SetCursor(65, 0);
-        std::cout << "WEEK: " << state.currentWeek;
-        SetCursor(65, 1);
-        std::cout << "DAY: " << state.currentDay;
-        SetCursor(65, 2);
-        std::cout << "AP: " << state.actionPoints;
-        SetCursor(65, 3);
-        std::cout << "ZONE: " << player.currentZone;
+        // Clean and correct HUD zone output
+        SetCursor(65, 0); std::cout << "WEEK: " << state.currentWeek << "       ";
+        SetCursor(65, 1); std::cout << "DAY: " << state.currentDay << "         ";
+        SetCursor(65, 2); std::cout << "AP: " << state.actionPoints << "        ";
+        SetCursor(65, 3); std::cout << "ZONE: " << player.currentZone << "     ";
 
         HandleInput(player, mapManager, state);
 

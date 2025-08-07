@@ -9,23 +9,33 @@
 void DrawMap(const MapManager& mapManager, const Player& player) {
     for (int y = 0; y < MAP_HEIGHT; ++y) {
         for (int x = 0; x < MAP_WIDTH; ++x) {
-            const Tile& tile = mapManager.map[y][x];
-
             SetCursor(x, y);
 
-            // Convert tile visuals
-            char displayChar = tile.character;
-            if (tile.character == '~' || tile.character == ',' || tile.character == '\'') {
-                displayChar = '.';  
+            if (x == player.position.X && y == player.position.Y) {
+                SetColor(14); // Yellow for player
+                std::cout << '@';
+                continue;
             }
 
-            // Player rendering
-            if (player.position.X == x && player.position.Y == y) {
-                std::cout << '@';
+            const Tile& tile = mapManager.map[y][x];
+
+            //  Visualize zone with color
+            switch (tile.zone) {
+            case 0: SetColor(8); break;  // Gray
+            case 1: SetColor(10); break; // Green
+            case 2: SetColor(11); break; // Cyan
+            case 3: SetColor(13); break; // Magenta
+            case 4: SetColor(12); break; // Red
+            default: SetColor(7); break; // White
+            }
+            if (tile.character == '.' || tile.character == ',' || tile.character == '~' || tile.character == '\'') {
+                std::cout << '.';
             }
             else {
-                std::cout << displayChar;
+                std::cout << tile.character;
             }
         }
     }
+
+    SetColor(7); // Reset color
 }

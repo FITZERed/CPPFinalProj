@@ -1,6 +1,6 @@
 #pragma once
 #include <windows.h>
-//#include "Inventory.h"
+#include "Inventory.h"
 
 class MapManager;
 class GameState;
@@ -8,7 +8,7 @@ class GameState;
 class Player {
 public:
     COORD position;
-//    Inventory inventory;
+    Inventory inventory;
     int currentZone = 0;
 
     Player();

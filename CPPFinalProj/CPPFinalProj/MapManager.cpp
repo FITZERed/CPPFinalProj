@@ -22,13 +22,24 @@ void MapManager::LoadRandomMap(Player& player) {
 
         for (int x = 0; x < MAP_WIDTH && x < line.length(); ++x) {
             char c = line[x];
-            map[y][x].character = c;
-            map[y][x].zone = GetZoneFromChar(c);
 
+            //  Get zone regardless of char replacement
+            int zone = GetZoneFromChar(c);
+
+            //  Fix: convert walkable chars to '.'
+            if (c == ',' || c == '~' || c == '\'' || c == '.' || c == 'P') {
+                map[y][x].character = '.';
+            }
+            else {
+                map[y][x].character = c;
+            }
+
+            map[y][x].zone = zone;
+
+            //  Assign player position
             if (c == 'P') {
                 player.position = { (SHORT)x, (SHORT)y };
-                player.currentZone = map[y][x].zone;  //  Use correct zone
-                map[y][x].character = '.';            //  Clear 'P' from map
+                player.currentZone = zone; //  Get from tile (now fixed)
             }
         }
         y++;
