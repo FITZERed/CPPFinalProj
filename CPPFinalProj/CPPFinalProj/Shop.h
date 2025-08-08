@@ -1,5 +1,6 @@
 #pragma once
 #include "Inventory.h"
+#define NOMINMAX   // Prevent Windows min/max macros from messing with std::min/std::max
 #include <windows.h>
 #include <iostream>
 

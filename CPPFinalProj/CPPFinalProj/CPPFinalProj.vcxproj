@@ -132,8 +132,11 @@
     <ClCompile Include="MapManager.cpp" />
     <ClCompile Include="MapRenderer.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="ResourceUtils.cpp" />
     <ClCompile Include="Shop.cpp" />
     <ClCompile Include="ShopInterface.cpp" />
+    <ClCompile Include="ShopManager.cpp" />
+    <ClCompile Include="ShopTemplateLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -145,8 +148,12 @@
     <ClInclude Include="MapManager.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="ResourceUtils.h" />
     <ClInclude Include="Shop.h" />
     <ClInclude Include="ShopInterface.h" />
+    <ClInclude Include="ShopManager.h" />
+    <ClInclude Include="ShopTemplateLoader.h" />
+    <ClInclude Include="StringUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

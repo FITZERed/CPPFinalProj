@@ -3,76 +3,152 @@
 #include <sstream>
 #include <string>
 #include <random>
-#include <algorithm>
+#include <vector>
+#include <iostream>
+#include <cctype> // For std::isspace
+#include <algorithm> // For std::shuffle and std::min
 #include "ResourceUtils.h"
 #include "StringUtils.h" // We'll define this below
 #include "Inventory.h"
 #include "config.h"
 
 
+// ---------------------
+// Implementation for ShopTemplateLoader
+// ---------------------
 std::vector<Shop> ShopTemplateLoader::LoadRandomTemplates(int count, const std::string& filePath) {
     std::ifstream file(filePath);
-    if (!file) {
-        std::cerr << "Failed to open template file: " << filePath << "\n"; //exits with error if no file is found
-        exit(1);
+    if (!file.is_open()) {
+        std::cerr << "ShopTemplateLoader: failed to open template file: " << filePath << "\n";
+        return {};
     }
 
-	std::vector<std::string> rawTemplates; // Stores all templates as raw strings
-    std::string line, currentBlock;
-
-    while (std::getline(file, line)) {
-        if (line == "---") {
-            if (!currentBlock.empty()) {
-                rawTemplates.push_back(currentBlock); // Saves a template as a string in rawTemplates
+    // 1) Read file into blocks separated by a line that is exactly '---' (after trimming)
+    std::vector<std::string> blocks;
+    std::string currentLine;
+    std::string currentBlock;
+    while (std::getline(file, currentLine)) {
+        std::string t = Trim(currentLine);
+        if (t == "---") {
+            if (!Trim(currentBlock).empty()) {
+                blocks.push_back(currentBlock);
                 currentBlock.clear();
             }
         }
         else {
-            currentBlock += line + "\n";
+            currentBlock += currentLine;
+            currentBlock.push_back('\n');
         }
     }
-    if (!currentBlock.empty()) rawTemplates.push_back(currentBlock);
+    if (!Trim(currentBlock).empty()) {
+        blocks.push_back(currentBlock);
+        currentBlock.clear();
+    }
 
-    std::random_device rd;  //Randomization tools
-    std::mt19937 gen(rd());
-    std::shuffle(rawTemplates.begin(), rawTemplates.end(), gen);
+    // 2) Parse each block into a Shop object
+    std::vector<Shop> parsed;
+    parsed.reserve(blocks.size());
 
-	std::vector<Shop> result; //Vector to store parsed Shop objects
+    int nextId = 0;
+    for (const std::string& block : blocks) {
+        std::istringstream ss(block);
+        std::string raw;
+        std::vector<std::string> lines;
 
-    for (int i = 0; i < count && i < rawTemplates.size(); ++i) {
-        std::istringstream iss(rawTemplates[i]);
-        std::string line;
+        // Collect non-empty trimmed lines (keeps order)
+        while (std::getline(ss, raw)) {
+            std::string t = Trim(raw);
+            if (!t.empty()) lines.push_back(t);
+        }
+
+        // Defensive: need at least 5 lines (name, resource, gold, stock, priorities)
+        if (lines.size() < 5) {
+            // If the block is malformed, skip it but print a warning.
+            std::cerr << "ShopTemplateLoader: skipping malformed template (expected >=5 lines):\n"
+                << block << "\n";
+            continue;
+        }
+
         Shop shop;
-        shop.name = "Unnamed";
-        shop.zone = 0;
-        shop.id = i;
-        shop.position = { 0, 0 };
+        shop.id = nextId++;
+        shop.zone = -1;
+        shop.position = { -1, -1 };
+        for (int i = 0; i < static_cast<int>(ResourceType::Count); ++i) shop.priorities[i] = 0;
+        shop.name = lines[0]; // first line is the shop name
 
-        for (int& p : shop.priorities)
-            p = 0; // Default priority = 0
+        // Parse the remaining lines by key:value
+        // Expected keys: ResourceSold, Gold, Stock, Priorities
+        // We'll parse them in any order for robustness, but we require them to exist.
+        ResourceType mainResource = ResourceType::Spices; // default fallback
+        bool hasResource = false;
 
-        while (std::getline(iss, line)) {
-            if (line.find("ShopName:") != std::string::npos) {
-                shop.name = line.substr(line.find(":") + 2);
+        for (size_t li = 1; li < lines.size(); ++li) {
+            const std::string& ln = lines[li];
+            size_t colon = ln.find(':');
+            if (colon == std::string::npos) {
+                // Unexpected line format — skip
+                continue;
             }
-            else if (line.find("Stock:") != std::string::npos) {
-                std::getline(iss, line);
-                std::string res = line.substr(4, line.find(":") - 4);
-                int amount = std::stoi(line.substr(line.find(":") + 2));
-                shop.inventory.Add(StringToResource(res), amount);
+            std::string key = Trim(ln.substr(0, colon));
+            std::string value = Trim(ln.substr(colon + 1));
+
+            if (key == "ResourceSold") {
+                mainResource = StringToResource(value);
+                hasResource = true;
             }
-            else if (line.find("Priorities:") != std::string::npos) {
-                while (std::getline(iss, line) && !line.empty()) {
-                    std::string res = line.substr(4, line.find(":") - 4);
-                    int prio = std::stoi(line.substr(line.find(":") + 2));
-                    ResourceType rt = StringToResource(res);
-                    shop.priorities[(int)rt] = prio;
+            else if (key == "Gold") {
+                // Parse integer -> inventory.money
+                try {
+                    int gold = std::stoi(value);
+                    shop.inventory.money = gold;
+                }
+                catch (...) {
+                    shop.inventory.money = 0;
+                    std::cerr << "ShopTemplateLoader: could not parse Gold value: '" << value << "' for shop: " << shop.name << "\n";
                 }
             }
+            else if (key == "Stock") {
+                // Parse stock integer -> add to shop.inventory of the main resource
+                int stock = 0;
+                try {
+                    stock = std::stoi(value);
+                }
+                catch (...) {
+                    stock = 0;
+                }
+                if (hasResource) {
+                    shop.inventory.Add(mainResource, stock);
+                }
+                else {
+                    // In case ResourceSold appears after Stock (unlikely per agreed format),
+                    // attempt to add later — here we just warn and skip adding.
+                    std::cerr << "ShopTemplateLoader: 'Stock' found before 'ResourceSold' in template '" << shop.name << "'. Stock ignored.\n";
+                }
+            }
+            else if (key == "Priorities") {
+                // Read up to ResourceType::Count integers from value
+                std::istringstream pis(value);
+                for (int i = 0; i < static_cast<int>(ResourceType::Count); ++i) {
+                    int p = 0;
+                    if (!(pis >> p)) p = 0;
+                    shop.priorities[i] = p;
+                }
+            }
+            else {
+                // Unknown key — ignore but warn
+                std::cerr << "ShopTemplateLoader: unknown key '" << key << "' in template for shop: " << shop.name << "\n";
+            }
         }
 
-		result.push_back(shop); // Add the parsed shop to the result vector
+        parsed.push_back(shop);
     }
 
+    // 3) Shuffle parsed templates and return up to 'count' (no duplicates)
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(parsed.begin(), parsed.end(), gen);
+
+    int take = std::min(count, static_cast<int>(parsed.size()));
+    std::vector<Shop> result(parsed.begin(), parsed.begin() + take);
     return result;
 }

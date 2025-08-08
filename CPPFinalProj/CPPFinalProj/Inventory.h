@@ -10,10 +10,12 @@ enum class ResourceType {
 
 class Inventory {
 public:
+    Inventory();
+
     int money;
     int resourceCounts[(int)ResourceType::Count];
 
     void Add(ResourceType, int);
     void Remove(ResourceType, int);
-    int GetAmount(ResourceType);
+    int GetAmount(ResourceType) const;
 };
