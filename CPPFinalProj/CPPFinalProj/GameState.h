@@ -1,5 +1,6 @@
 #pragma once
 #include "config.h"
+#include "Shop.h"
 
 enum class GameMode {
     Market,
@@ -14,4 +15,7 @@ struct GameState {
     int playerMoney = STARTING_MONEY;
     int actionPoints = STARTING_ACTION_POINTS;
     GameMode mode = GameMode::Market;
+
+    Shop* currentShop = nullptr; // Track shop you're currently in
+
 };

@@ -5,7 +5,7 @@ enum class ResourceType {
     Jewelry,
     Minerals,
     Medicine,
-    Count
+	Count            // This is used as a trick to get the number of resource types (ResourceType::Count will be 5)
 };
 
 class Inventory {

@@ -30,6 +30,11 @@ void MapManager::LoadRandomMap(Player& player) {
             if (c == ',' || c == '~' || c == '\'' || c == '.' || c == 'P') {
                 map[y][x].character = '.';
             }
+            if (c >= '1' && c <= '5') {
+                int shopIndex = c - '1';
+                map[y][x].shopID = shopIndex;
+                map[y][x].character = c;
+            }
             else {
                 map[y][x].character = c;
             }

@@ -8,6 +8,8 @@
 struct Tile {
     char character;
     int zone;
+    int shopID = -1; // ID of the shop if this tile is a shop entrance
+
 };
 
 class MapManager {

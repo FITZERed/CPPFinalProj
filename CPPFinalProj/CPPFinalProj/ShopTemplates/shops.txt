@@ -1,0 +1,72 @@
+ShopName: Desert Merchant
+Stock:
+    Spices: 10
+Priorities:
+    Textiles: 2
+    Jewelry: 1
+    Minerals: 3
+    Medicine: 4
+---
+ShopName: Mountain Trader
+Stock:
+    Minerals: 8
+Priorities:
+    Spices: 3
+    Textiles: 2
+    Jewelry: 2
+    Medicine: 1
+---
+ShopName: Garment Maker
+Stock:
+    Textiles: 12
+Priorities:
+    Spices: 4
+    Minerals: 2
+    Jewelry: 1
+    Medicine: 1
+---
+ShopName: The Jeweler
+Stock:
+    Jewelry: 6
+Priorities:
+    Spices: 1
+    Minerals: 2
+    Textiles: 2
+    Medicine: 3
+---
+ShopName: Alchemist's Nook
+Stock:
+    Medicine: 9
+Priorities:
+    Spices: 2
+    Minerals: 2
+    Textiles: 4
+    Jewelry: 1
+---
+ShopName: Dust Dealer
+Stock:
+    Spices: 10
+Priorities:
+    Minerals: 3
+    Textiles: 3
+    Jewelry: 2
+    Medicine: 1
+---
+ShopName: Miner
+Stock:
+    Minerals: 5
+Priorities:
+    Spices: 1
+    Textiles: 3
+    Jewelry: 3
+    Medicine: 3
+---
+ShopName: Silk Enthusiast
+Stock:
+    Textiles: 10
+Priorities:
+    Spices: 1
+    Minerals:3
+    Jewelry: 3
+    Medicine: 2
+---
