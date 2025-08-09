@@ -20,34 +20,34 @@ void MapManager::LoadRandomMap(Player& player) {
             std::cerr << "Warning: Line " << y << " is too short.\n";
         }
 
-        for (int x = 0; x < MAP_WIDTH && x < line.length(); ++x) {
+        for (int x = 0; x < MAP_WIDTH && x < (int)line.length(); ++x) {
             char c = line[x];
 
-            //  Get zone regardless of char replacement
             int zone = GetZoneFromChar(c);
+            map[y][x].zone = zone;
+            map[y][x].shopID = -1; // default: no shop here
 
-            //  Fix: convert walkable chars to '.'
-            if (c == ',' || c == '~' || c == '\'' || c == '.' || c == 'P') {
-                map[y][x].character = '.';
+            if (c == 'P') {
+                // Player start position
+                player.position = { (SHORT)x, (SHORT)y };
+                player.currentZone = zone;
+                map[y][x].character = '.'; // clear 'P' from map
+                continue; // done with this tile
             }
+
             if (c >= '1' && c <= '5') {
                 int shopIndex = c - '1';
                 map[y][x].shopID = shopIndex;
                 map[y][x].character = c;
             }
-            else {
-                map[y][x].character = c;
+            else if (c == ',' || c == '~' || c == '\'' || c == '.') {
+                map[y][x].character = '.'; // normalize walkables
             }
-
-            map[y][x].zone = zone;
-
-            //  Assign player position
-            if (c == 'P') {
-                player.position = { (SHORT)x, (SHORT)y };
-                player.currentZone = zone; //  Get from tile (now fixed)
+            else {
+                map[y][x].character = c; // keep whatever it is
             }
         }
-        y++;
+        ++y;
     }
 }
 
