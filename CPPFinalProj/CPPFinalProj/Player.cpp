@@ -3,9 +3,10 @@
 #include "GameState.h"
 #include "config.h"
 
-Player::Player() {
+Player::Player(int StartingMoney) {
     position = { 0, 0 };
     currentZone = 0; // Default zone, will be set during map load
+	inventory.money = StartingMoney; // Initialize with starting money
 }
 
 void Player::Move(int dx, int dy, MapManager& map, GameState& gameState) {

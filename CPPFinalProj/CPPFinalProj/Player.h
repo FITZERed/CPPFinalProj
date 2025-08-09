@@ -11,7 +11,7 @@ public:
     Inventory inventory;
     int currentZone = 0;
 
-    Player();
+    Player(int startingMoney);
 
     void Move(int dx, int dy, MapManager& mapManager, GameState& gameState);
 };

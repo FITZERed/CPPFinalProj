@@ -13,59 +13,61 @@
 #include "config.h"
 
 
-// ---------------------
-// Implementation for ShopTemplateLoader
-// ---------------------
+
+// LoadRandomTemplates(count, filePath)
+// - reads file, splits into blocks
+// - parses blocks into Shop objects
+// - shuffles and returns up to 'count' shops (no duplicates)
 std::vector<Shop> ShopTemplateLoader::LoadRandomTemplates(int count, const std::string& filePath) {
     std::ifstream file(filePath);
     if (!file.is_open()) {
-        std::cerr << "ShopTemplateLoader: failed to open template file: " << filePath << "\n";
+        std::cerr << "ShopTemplateLoader: failed to open " << filePath << "\n";
         return {};
     }
 
-    // 1) Read file into blocks separated by a line that is exactly '---' (after trimming)
+    // 1) Read file and separate to blocks by '---'
     std::vector<std::string> blocks;
-    std::string currentLine;
-    std::string currentBlock;
-    while (std::getline(file, currentLine)) {
-        std::string t = Trim(currentLine);
+    std::string line;
+    std::string block;
+    while (std::getline(file, line)) {
+        std::string t = Trim(line);
         if (t == "---") {
-            if (!Trim(currentBlock).empty()) {
-                blocks.push_back(currentBlock);
-                currentBlock.clear();
+            if (!Trim(block).empty()) {
+                blocks.push_back(block);
+                block.clear();
             }
         }
         else {
-            currentBlock += currentLine;
-            currentBlock.push_back('\n');
+            block += line;
+            block.push_back('\n');
         }
     }
-    if (!Trim(currentBlock).empty()) {
-        blocks.push_back(currentBlock);
-        currentBlock.clear();
+    if (!Trim(block).empty()) {
+        blocks.push_back(block);
+        block.clear();
     }
 
-    // 2) Parse each block into a Shop object
+    // 2) Parse each block according to format:
+    // Name (line 0)
+    // ResourceSold: ResourceName
+    // Gold: <int>
+    // Stock: <int>
+    // Priorities: p1 p2 p3 p4 p5
     std::vector<Shop> parsed;
     parsed.reserve(blocks.size());
 
     int nextId = 0;
-    for (const std::string& block : blocks) {
-        std::istringstream ss(block);
+    for (const std::string& b : blocks) {
+        std::istringstream ss(b);
         std::string raw;
         std::vector<std::string> lines;
-
-        // Collect non-empty trimmed lines (keeps order)
         while (std::getline(ss, raw)) {
             std::string t = Trim(raw);
             if (!t.empty()) lines.push_back(t);
         }
 
-        // Defensive: need at least 5 lines (name, resource, gold, stock, priorities)
         if (lines.size() < 5) {
-            // If the block is malformed, skip it but print a warning.
-            std::cerr << "ShopTemplateLoader: skipping malformed template (expected >=5 lines):\n"
-                << block << "\n";
+            std::cerr << "ShopTemplateLoader: skipping invalid template:\n" << b << "\n";
             continue;
         }
 
@@ -74,81 +76,73 @@ std::vector<Shop> ShopTemplateLoader::LoadRandomTemplates(int count, const std::
         shop.zone = -1;
         shop.position = { -1, -1 };
         for (int i = 0; i < static_cast<int>(ResourceType::Count); ++i) shop.priorities[i] = 0;
-        shop.name = lines[0]; // first line is the shop name
 
-        // Parse the remaining lines by key:value
-        // Expected keys: ResourceSold, Gold, Stock, Priorities
-        // We'll parse them in any order for robustness, but we require them to exist.
-        ResourceType mainResource = ResourceType::Spices; // default fallback
-        bool hasResource = false;
+        // Name
+        shop.name = lines[0];
 
-        for (size_t li = 1; li < lines.size(); ++li) {
-            const std::string& ln = lines[li];
+        // parse keyed lines
+        ResourceType parsedMain = ResourceType::Spices; // Defensive: ensure mainResource is set. If not, leave default (Spices).
+        bool hasMain = false;
+
+        for (size_t i = 1; i < lines.size(); ++i) {
+            const std::string& ln = lines[i];
             size_t colon = ln.find(':');
-            if (colon == std::string::npos) {
-                // Unexpected line format — skip
-                continue;
-            }
+            if (colon == std::string::npos) continue;
             std::string key = Trim(ln.substr(0, colon));
             std::string value = Trim(ln.substr(colon + 1));
 
             if (key == "ResourceSold") {
-                mainResource = StringToResource(value);
-                hasResource = true;
+                parsedMain = StringToResource(value);
+                hasMain = true;
+                shop.mainResource = parsedMain;
             }
             else if (key == "Gold") {
-                // Parse integer -> inventory.money
                 try {
-                    int gold = std::stoi(value);
-                    shop.inventory.money = gold;
+                    shop.inventory.money = std::stoi(value);
                 }
                 catch (...) {
                     shop.inventory.money = 0;
-                    std::cerr << "ShopTemplateLoader: could not parse Gold value: '" << value << "' for shop: " << shop.name << "\n";
+                    std::cerr << "ShopTemplateLoader: invalid money value '" << value << "' for shop: " << shop.name << "\n";
                 }
             }
             else if (key == "Stock") {
-                // Parse stock integer -> add to shop.inventory of the main resource
-                int stock = 0;
                 try {
-                    stock = std::stoi(value);
+                    int stock = std::stoi(value);
+                    if (hasMain) {
+                        shop.inventory.Add(parsedMain, stock);
+                    }
+                    else {
+                        // If Stock occurs before ResourceSold (unexpected), warn and skip
+                        std::cerr << "ShopTemplateLoader: Stock found before ResourceSold in '" << shop.name << "'. Stock ignored.\n";
+                    }
                 }
                 catch (...) {
-                    stock = 0;
-                }
-                if (hasResource) {
-                    shop.inventory.Add(mainResource, stock);
-                }
-                else {
-                    // In case ResourceSold appears after Stock (unlikely per agreed format),
-                    // attempt to add later — here we just warn and skip adding.
-                    std::cerr << "ShopTemplateLoader: 'Stock' found before 'ResourceSold' in template '" << shop.name << "'. Stock ignored.\n";
+                    std::cerr << "ShopTemplateLoader: invalid Stock value '" << value << "' for shop: " << shop.name << "\n";
                 }
             }
             else if (key == "Priorities") {
-                // Read up to ResourceType::Count integers from value
                 std::istringstream pis(value);
-                for (int i = 0; i < static_cast<int>(ResourceType::Count); ++i) {
-                    int p = 0;
-                    if (!(pis >> p)) p = 0;
-                    shop.priorities[i] = p;
+                for (int p = 0; p < static_cast<int>(ResourceType::Count); ++p) {
+                    int pri = 0;
+                    if (!(pis >> pri)) pri = 0;
+                    // Clamp to 0..4
+                    if (pri < 0) pri = 0;
+                    if (pri > 4) pri = 4;
+                    shop.priorities[p] = pri;
                 }
             }
             else {
-                // Unknown key — ignore but warn
                 std::cerr << "ShopTemplateLoader: unknown key '" << key << "' in template for shop: " << shop.name << "\n";
             }
         }
-
         parsed.push_back(shop);
     }
 
-    // 3) Shuffle parsed templates and return up to 'count' (no duplicates)
+    // 3) Shuffle and pick up to 'count'
     std::random_device rd;
     std::mt19937 gen(rd());
     std::shuffle(parsed.begin(), parsed.end(), gen);
 
     int take = std::min(count, static_cast<int>(parsed.size()));
-    std::vector<Shop> result(parsed.begin(), parsed.begin() + take);
-    return result;
+    return std::vector<Shop>(parsed.begin(), parsed.begin() + take);
 }

@@ -136,7 +136,9 @@
     <ClCompile Include="Shop.cpp" />
     <ClCompile Include="ShopInterface.cpp" />
     <ClCompile Include="ShopManager.cpp" />
+    <ClCompile Include="ShopRenderer.cpp" />
     <ClCompile Include="ShopTemplateLoader.cpp" />
+    <ClCompile Include="ShopUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -152,7 +154,9 @@
     <ClInclude Include="Shop.h" />
     <ClInclude Include="ShopInterface.h" />
     <ClInclude Include="ShopManager.h" />
+    <ClInclude Include="ShopRenderer.h" />
     <ClInclude Include="ShopTemplateLoader.h" />
+    <ClInclude Include="ShopUI.h" />
     <ClInclude Include="StringUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
